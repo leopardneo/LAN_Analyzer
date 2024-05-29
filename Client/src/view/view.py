@@ -1,3 +1,7 @@
+"""
+Author: Ofir Brovin
+This file is the view module of the LAN Analyzer host connector client.
+"""
 import datetime
 
 from PyQt5 import QtCore
@@ -7,6 +11,9 @@ from PyQt5.uic import loadUi
 
 
 class ConnectorClientWindow(QMainWindow):
+    """
+    (LAN Analyzer) connector client Window
+    """
     def __init__(self):
         """
         Initiates the host connector window.
@@ -63,7 +70,14 @@ class ConnectorClientWindow(QMainWindow):
         if warning_message:
             self.apply_warning(warning_text=message, is_critical=is_critical_warning)
 
-    def apply_warning(self, warning_text: str, is_critical):
+    def apply_warning(self, warning_text: str, is_critical) -> None:
+        """
+        Handles applying warning on the screen.
+        Sets the last warning label and opens alert pop-up.
+        :param warning_text: The warning text.
+        :param is_critical: Is the warning critical type.
+        :return: None
+        """
         # Set the last warning label
         if is_critical:
             last_warning_label_text = f"[CRITICAL]\n{warning_text}"
@@ -102,6 +116,10 @@ class ConnectorClientWindow(QMainWindow):
         self.statusbar.showMessage("Attempting To Reconnect...")
 
     def analyzer_connected(self) -> None:
+        """
+        Sets the widgets to the lan connected state.
+        :return: None
+        """
         self.statusbar.setStyleSheet("")
         self.statusbar.showMessage("Connected to LAN Analyzer")
         self.reconnect_button.setDisabled(True)
