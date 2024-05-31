@@ -107,8 +107,8 @@ class ConnectorClientNetwork(QObject):
                 elif data.startswith(b"<FILE_TRANSFER_START>"):
                     # File transfer start declaration message.
                     self.buff_size = 1024 * 8  # Set buffer size bigger to support file transfer
-                    file_name = data.split(b"@", maxsplit=1)[1].decode()  # Extract the file name from the FILE_TRANSFER_START message
-                    self.downloaded_file = (file_name, [])  # Initialize the downloaded file storing var
+                    file_name = data.split(b"@", maxsplit=1)[1]  # Extract the file name from the FILE_TRANSFER_START message
+                    self.downloaded_file = (file_name.decode(), [])  # Initialize the downloaded file storing var
                     # Remove the <FILE_TRANSFER_START>@{file_name} prefix and check if there is file data after it
                     data = data[22 + len(file_name):]  # (22 = len of <FILE_TRANSFER_START> header)
                     if data:

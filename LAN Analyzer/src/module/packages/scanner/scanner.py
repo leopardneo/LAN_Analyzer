@@ -308,11 +308,13 @@ class NetworkScanner:
                     host = self.ip_to_host_obj_dict[host_ip_addr]  # Work on the same host object
                 else:
                     print("IP CONFLICT!!!")  # TODO
+                    return
             elif host_ip_addr == self.router_obj.ip_address:
                 if host_mac_addr == self.router_obj.mac_address:
                     host = self.router_obj  # Work on the same host (router) object
                 else:
                     print("IP CONFLICT!!!")  # TODO
+                    return
             else:
                 mac_vendor = self.mac_vendor_lookup_module.get_mac_vendor(host_mac_addr) if self.mac_vendor_lookup_module is not None else ""
                 host = Host(hostname="", ip_address=host_ip_addr, mac_address=host_mac_addr, mac_vendor=mac_vendor, response_time=-1)
