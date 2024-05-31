@@ -57,8 +57,6 @@ class LanAnalyzer:
         # Fingerprint scan progress update signal
         self.network_module.fp_scan_progress_signal.connect(self.view_window.handle_fp_scan_progress_signal)
         # Fingerprint scan finished signal
-        # QUEUE - 26/04
-        # self.network_module.fp_scan_finished_signal.connect(self.view_window.handle_fp_scan_finished_signal)
         self.network_module.fp_scan_finished_signal.connect(self._handle_host_fp_scan_finished_signal)
 
         # Modules signals
@@ -388,21 +386,25 @@ class LanAnalyzer:
         :return: None
         """
         print(f"handle_host_fp_scan_finished_signal called - {host_obj.ip_address} finished fp scan!")
+        # Add event to logger before clearing vars
+        self.view_window.logger.add_event(
+            event_message=f"{host_obj.current_fp_scan_str} on {host_obj.ip_address} has finished!",
+            event_type=self.view_window.logger.FP_SCAN_EVENT_TYPE)
+
+        host_obj.current_fp_scan_str = ""
         host_obj.fp_scan_in_progress = False
         host_obj.current_fp_scan = ""
         with host_obj.stop_fp_scan_flag_lock:
             host_obj.stop_fp_scan_flag.clear()
+
+        # Update the host information and management window (if it's opened) and update device image.
+        self.view_window.handle_fp_scan_finished(host_obj)
+
         # If the host has more fp scans in the queue, run the first one.
         if host_obj.fp_scans_queue:
             self._handle_run_host_fp_scan(host_obj, host_obj.fp_scans_queue.pop(0))
 
-        # Update the host information and management window (if it's opened) and update device image.
-        self.view_window.handle_fp_scan_finished(host_obj)
-        # Add event to logger
-        self.view_window.logger.add_event(
-            event_message=f"{host_obj.current_fp_scan_str} on {host_obj.ip_address} has finished!",
-            event_type=self.view_window.logger.FP_SCAN_EVENT_TYPE)
-        host_obj.current_fp_scan_str = ""
+
 
     def _handle_open_host_advanced_port_win(self, host_obj: Host) -> None:
         """

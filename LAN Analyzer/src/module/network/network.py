@@ -304,8 +304,8 @@ class AnalyzerNetwork(QObject):
         elif scan_type == self.OS_DETECTION_SCAN:
             if self.os_detector is None:
                 return self.alert_pop_window_signal.emit("ERROR", "Missing the data file for the OS Detector module.\n"
-                                                            "Please make sure it exists in the data folder "
-                                                            "of the OS Detector and try again.")
+                                                                  "Please make sure it exists in the data folder "
+                                                                  "of the OS Detector and try again.")
             scan_str = "OS detection"
             fp_scan_thread = threading.Thread(target=self._run_os_detection_scan, args=(host_obj, timeout))
 
