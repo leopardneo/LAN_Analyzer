@@ -1,9 +1,11 @@
 """
-Author: Ofir Brovin
+Author: Ofir Brovin.
 This file is the main runner script of the LAN Analyzer host connector client.
 """
 import sys
 import configparser
+
+from typing import Tuple
 
 from PyQt5.QtWidgets import QApplication
 
@@ -11,7 +13,11 @@ from src.controller import HostConnectorClient
 from src.module.util.ip_address_functions import is_valid_ip_address, is_private_ip_address
 
 
-def get_analyzer_listening_address():
+def _get_analyzer_listening_address() -> Tuple[str, int]:
+    """
+    Gets the LAN Analyzer listening address (IP, port) from the config.ini file.
+    :return: The address (IP, port)
+    """
     config: configparser.ConfigParser = configparser.ConfigParser()
     config.read("config.ini")
     if not config.sections():
@@ -34,7 +40,7 @@ def get_analyzer_listening_address():
 
 
 if __name__ == '__main__':
-    analyzer_address = get_analyzer_listening_address()
+    analyzer_address = _get_analyzer_listening_address()
     print("Starting Host Connector Client . . .")
     app = QApplication([])
     connector_client = HostConnectorClient(analyzer_address)

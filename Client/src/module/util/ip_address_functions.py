@@ -1,5 +1,5 @@
 """
-Author: Ofir Brovin
+Author: Ofir Brovin.
 This file is the network module utility file of the LAN Analyzer host connector client.
 """
 import ipaddress

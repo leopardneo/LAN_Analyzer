@@ -1,5 +1,5 @@
 """
-Author: Ofir Brovin
+Author: Ofir Brovin.
 This file is the view module of the LAN Analyzer host connector client.
 """
 import datetime
@@ -68,9 +68,9 @@ class ConnectorClientWindow(QMainWindow):
         self.chat_listWidget.addItem(item)
         # Apply the warning only after adding it to the chat list view so that it will be shown
         if warning_message:
-            self.apply_warning(warning_text=message, is_critical=is_critical_warning)
+            self._apply_warning(warning_text=message, is_critical=is_critical_warning)
 
-    def apply_warning(self, warning_text: str, is_critical) -> None:
+    def _apply_warning(self, warning_text: str, is_critical) -> None:
         """
         Handles applying warning on the screen.
         Sets the last warning label and opens alert pop-up.

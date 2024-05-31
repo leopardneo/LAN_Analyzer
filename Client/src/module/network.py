@@ -1,16 +1,16 @@
 """
-Author: Ofir Brovin
+Author: Ofir Brovin.
 This file is the network module of the LAN Analyzer host connector client.
 """
 from __future__ import annotations
 
-import os.path
 import ssl
 import sys
 import socket
+import os.path
 import threading
 
-from typing import Tuple, Literal
+from typing import Tuple
 
 from PyQt5.QtCore import pyqtSignal, QObject
 
@@ -35,40 +35,37 @@ class ConnectorClientNetwork(QObject):
         self.buff_size: int = 1024
         self.downloaded_file: Tuple[str, list] = ("", [])  # Stores the currently in download process file (name, content chunks)
 
+        self.connect_to_analyzer()
+
+    def connect_to_analyzer(self) -> None:
+        """
+        Attempts to connect to the LAN Analyzer.
+        Starts the _receive_messages thread if the connection was successful.
+        :return: None
+        """
         try:
-            connect_request_status: str = self.connect_to_analyzer()
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.connect(self.analyzer_address)
+
+            # Wrap the socket with SSL
+            self.ssl_socket = ssl.wrap_socket(self.socket, cert_reqs=ssl.CERT_NONE)
+
+            request_status = self.ssl_socket.recv(1024).decode()
+
+            if request_status:
+                if request_status == "REFUSED":
+                    sys.exit("The connection was not allowed by the LAN Analyzer.")
+
+            # Listen for incoming messages
+            receive_thread = threading.Thread(target=self._receive_messages)
+            receive_thread.daemon = True
+            receive_thread.start()
+
         except (ConnectionError, OSError, socket.timeout) as e:
             print(e)
             sys.exit("Could not connect to the LAN Analyzer.\n"
                      "Please make sure the provided IP and port in the config.ini file are correct,\n"
                      "and that the LAN Analyzer is running and accepting new connections.")
-        if connect_request_status:
-            if connect_request_status == "REFUSED":
-                sys.exit("The connection was not allowed by the LAN Analyzer.")
-        # self.socket.send(f"Server hello username@{self.username}".encode())
-
-        # Listen for incoming messages
-        receive_thread = threading.Thread(target=self._receive_messages)
-        receive_thread.daemon = True
-        receive_thread.start()
-        # self.handle_connection()
-
-    def connect_to_analyzer(self) -> Literal["ACCEPTED", "REFUSED"] | None:
-        """
-        Attempts to connect to the LAN Analyzer.
-        ConnectionError raised if connecting failed, request_status ("ACCEPTED" | "REFUSED) returned if connected.
-        :return: The connection request status or ConnectionError.
-        """
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect(self.analyzer_address)
-
-        # Wrap the socket with SSL
-        self.ssl_socket = ssl.wrap_socket(self.socket, cert_reqs=ssl.CERT_NONE)
-
-        request_status = self.ssl_socket.recv(1024).decode()
-
-        # request_status = self.socket.recv(1024).decode()
-        return request_status
 
     def send_message(self, message: str) -> None:
         """
@@ -82,7 +79,7 @@ class ConnectorClientNetwork(QObject):
         except OSError:
             # Socket closed
             print("SOCKETS CLOSED WHEN TRYING TO SEND A MESSAGE")
-            return self.analyzer_disconnected()
+            return self._analyzer_disconnected()
 
     def _receive_messages(self):
         """
@@ -94,10 +91,10 @@ class ConnectorClientNetwork(QObject):
                 data = self.ssl_socket.recv(self.buff_size)
             except ConnectionError:
                 # Analyzer (server) killed connection
-                return self.analyzer_disconnected()
+                return self._analyzer_disconnected()
             if not data:
                 # Analyzer closed
-                return self.analyzer_disconnected()
+                return self._analyzer_disconnected()
             else:
                 if data.startswith(b"<MESSAGE>"):
                     # Regular message of type - REGULAR / WARNING / CRITICAL
@@ -127,7 +124,7 @@ class ConnectorClientNetwork(QObject):
         """
         Handles file has finished being received.
         Saves the file to the saved_files dir and restores the buffer size.
-        :return:
+        :return: None
         """
         self.buff_size = 1024
         file_name = self.downloaded_file[0]
@@ -139,11 +136,10 @@ class ConnectorClientNetwork(QObject):
             save_downloaded_file.write(file_contents[:-19])  # Remove the <FILE_TRANSFER_END> tail
         self.message_received_signal.emit(f"Saved file \"{file_name}\" in the saved_files folder", "FINISHED_DOWNLOAD")
 
-    def analyzer_disconnected(self) -> None:
+    def _analyzer_disconnected(self) -> None:
         """
-        Updates the module values to indicate that the Analyzer has disconnected.
-        :return:
+        Updates the module values to indicate that the LAN Analyzer has disconnected.
+        :return: None
         """
-        # self.socket.close()
         self.ssl_socket.close()
         self.analyzer_disconnected_signal.emit()

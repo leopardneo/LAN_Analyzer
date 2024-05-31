@@ -1,5 +1,5 @@
 """
-Author: Ofir Brovin
+Author: Ofir Brovin.
 This file is the controller of the LAN Analyzer host connector client.
 """
 import socket
@@ -29,12 +29,12 @@ class HostConnectorClient:
         self.network_module.analyzer_disconnected_signal.connect(self.view_window.analyzer_disconnected)
 
         # View connections
-        self.view_window.send_tb.clicked.connect(self.handle_send_message)
-        self.view_window.message_lineEdit.returnPressed.connect(self.handle_send_message)
+        self.view_window.send_tb.clicked.connect(self._handle_send_message)
+        self.view_window.message_lineEdit.returnPressed.connect(self._handle_send_message)
 
-        self.view_window.reconnect_button.clicked.connect(lambda: Thread(target=self.handle_reconnect).start())
+        self.view_window.reconnect_button.clicked.connect(lambda: Thread(target=self._handle_reconnect).start())
 
-    def handle_send_message(self) -> None:
+    def _handle_send_message(self) -> None:
         """
         Sends a message to the LAN Analyzer.
         Function called when send button pressed or enter pressed in the lineEdit.
@@ -51,7 +51,7 @@ class HostConnectorClient:
         except Exception as e:
             print("ERROR ON CLIENT HANDLE SEND MESSAGE:::", e)
 
-    def handle_reconnect(self) -> None:
+    def _handle_reconnect(self) -> None:
         """
         Tries to re-establish the connection with the LAN Analyzer.
         :return: None
