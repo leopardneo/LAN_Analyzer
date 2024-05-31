@@ -679,15 +679,27 @@ class LanAnalyzer:
         try:
             target_host = self.currently_selected_connected_host
             target_host_obj = self.network_module.get_host_obj(host_ip_addr=target_host[0])
-            target_host_obj.warning_window = SendWarningWindow(target_host_obj)
+            if target_host_obj:
+                target_host_obj.warning_window = SendWarningWindow(warning_dest_host_obj=target_host_obj)
 
-            target_host_obj.warning_window.send_warning_button.clicked.connect(lambda:
-                                                                               self.network_module.hosts_connector.send_message(
-                                                                                   target_host_obj.warning_window.warning_plainTextEdit.toPlainText(),
-                                                                                   target_host_obj.warning_window.warning_type_comboBox.currentText().upper(),
-                                                                                   target_host))
+                target_host_obj.warning_window.send_warning_button.clicked.connect(lambda:
+                                                                                   self.network_module.hosts_connector.send_message(
+                                                                                       target_host_obj.warning_window.warning_plainTextEdit.toPlainText(),
+                                                                                       target_host_obj.warning_window.warning_type_comboBox.currentText().upper(),
+                                                                                       target_host))
 
-            target_host_obj.warning_window.show()
+                target_host_obj.warning_window.show()
+            else:
+                # Use the view window as a holder for the window for not scanned connected hosts.
+                self.view_window.warning_window = SendWarningWindow(warning_dest_ip_addr=target_host[0])
+
+                self.view_window.warning_window.send_warning_button.clicked.connect(lambda:
+                                                                                   self.network_module.hosts_connector.send_message(
+                                                                                       self.view_window.warning_window.warning_plainTextEdit.toPlainText(),
+                                                                                       self.view_window.warning_window.warning_type_comboBox.currentText().upper(),
+                                                                                       target_host))
+
+                self.view_window.warning_window.show()
         except Exception as e:
             print("ERROR OCCURRED WHEN GENERATING WARNING SCREEN WINDOW:::", e)
 

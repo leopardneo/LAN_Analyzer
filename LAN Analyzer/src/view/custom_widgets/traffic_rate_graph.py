@@ -1,3 +1,7 @@
+"""
+Author: Ofir Brovin.
+This file contains the traffic rate graph widget of LAN Analyzer application.
+"""
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -6,13 +10,20 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 from PyQt5 import QtCore
-from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtWidgets import QVBoxLayout, QWidget, QAction
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QVBoxLayout, QWidget
 
 
 class TrafficRateGraph(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    """
+    QWidget for displaying a traffic rate matplotlib graph.
+    """
+    def __init__(self, parent_widget=None):
+        """
+        Initiates the graph widget.
+        :param parent_widget: The parent widget of the graph.
+        """
+        super().__init__(parent_widget)
 
         self.data = None
         self.times = None
@@ -34,13 +45,24 @@ class TrafficRateGraph(QWidget):
         self.annot = None  # Stores the annotation object
 
         # Connect mouse hover event
-        self.canvas.mpl_connect("motion_notify_event", self.hover_event)
+        self.canvas.mpl_connect("motion_notify_event", self._hover_event)
 
-    def clear_plot(self):
+    def clear_plot(self) -> None:
+        """
+        Clears the current plot.
+        :return: None
+        """
         self.ax.clear()
         self.canvas.draw()
 
-    def update_data(self, data, times, color: str):
+    def update_data(self, data, times, color: str) -> None:
+        """
+        Updates the plot with new data.
+        :param data: The traffic rate data.
+        :param times: The corresponding timestamps.
+        :param color: The color of the plot line.
+        :return: None
+        """
         self.ax.clear()
         times_no_ms = [time.replace(microsecond=0) for time in times]  # Remove milliseconds
         self.times = mdates.date2num(times_no_ms)  # Convert times to matplotlib date numbers
@@ -53,7 +75,12 @@ class TrafficRateGraph(QWidget):
         self.figure.tight_layout()
         self.canvas.draw()
 
-    def hover_event(self, event):
+    def _hover_event(self, event) -> None:
+        """
+        Handles the hover event over the plot.
+        :param event: The mouse hover event.
+        :return: None
+        """
         if event.inaxes == self.ax:
             x, y = event.xdata, event.ydata
             if x is not None and y is not None:

@@ -1,13 +1,24 @@
+"""
+Author: Ofir Brovin.
+This file contains the send warning to a connected host view window part of the LAN Analyzer application.
+"""
 from PyQt5 import QtCore
-from PyQt5.QtCore import pyqtSignal
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget
 
 
 class SendWarningWindow(QWidget):
-    def __init__(self, host_obj: object):
-        self.host_obj = host_obj
+    """
+    Send warning window class.
+    """
+    def __init__(self, warning_dest_host_obj: object = None, warning_dest_ip_addr: str = ""):
+        """
+        Initiates the send warning to a connected host window.
+        :param warning_dest_host_obj: The connected host Host object.
+        :param warning_dest_ip_addr: The connected host IP address.
+        """
+        self.host_obj = warning_dest_host_obj
 
         super().__init__()
         loadUi(r"src\view\windows\views\send_warning_window.ui", self)
@@ -16,26 +27,33 @@ class SendWarningWindow(QWidget):
         self.os_warning_button.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
         self.send_warning_button.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
 
-        self.open_ports_warning_button.clicked.connect(self.handle_open_ports_warning_button)
-        self.os_warning_button.clicked.connect(self.handle_os_warning_button)
+        self.open_ports_warning_button.clicked.connect(self._handle_open_ports_warning_button)
+        self.os_warning_button.clicked.connect(self._handle_os_warning_button)
 
-        self.warning_plainTextEdit.textChanged.connect(self.handle_warning_text_changed)
+        self.warning_plainTextEdit.textChanged.connect(self._handle_warning_text_changed)
 
-        self.warning_title_label.setText(f"Send a warning to {host_obj.ip_address}")
+        if self.host_obj:
+            self.warning_title_label.setText(f"Send a warning to {self.host_obj.ip_address}")
+        else:
+            self.warning_title_label.setText(f"Send a warning to {warning_dest_ip_addr}")
 
-        if host_obj.open_ports:
-            if host_obj.open_ports[0] or host_obj.open_ports[1]:
+        if self.host_obj and self.host_obj.open_ports:
+            if self.host_obj.open_ports[0] or self.host_obj.open_ports[1]:
                 self.open_ports_warning_button.setEnabled(True)
 
-        if host_obj.operating_sys:
-            print(host_obj.operating_sys)
+        if self.host_obj and self.host_obj.operating_sys:
             self.os_warning_button.setEnabled(True)
 
-    def handle_open_ports_warning_button(self):
+    def _handle_open_ports_warning_button(self) -> None:
+        """
+        Handles the warning about open ports button click.
+        Creates the warning about the ports.
+        :return: None
+        """
         try:
             open_ports_warning_text: str = ""
             total_open_amount: int = 0
-            if self.host_obj.open_ports:
+            if self.host_obj and self.host_obj.open_ports:
                 if not self.host_obj.open_ports[0] and not self.host_obj.open_ports[1]:
                     open_ports_warning_text = "No open ports detected."
                 else:
@@ -54,9 +72,14 @@ class SendWarningWindow(QWidget):
         except Exception as e:
             print("ERROR ON OPEN PORTS WARNING BUTTON HANDLE:::", e)
 
-    def handle_os_warning_button(self):
-        os_warning_text: str = ""
-        host_os = self.host_obj.operating_sys
+    def _handle_os_warning_button(self) -> None:
+        """
+        Handles the warning about OS button click.
+        Creates the warning about the OS.
+        :return: None
+        """
+        os_warning_text: str
+        host_os = self.host_obj.operating_sys if self.host_obj else ""
         if not host_os or "Not Available" in host_os:
             os_warning_text = "Running OS not detected."
         else:
@@ -64,7 +87,12 @@ class SendWarningWindow(QWidget):
 
         self.warning_plainTextEdit.setPlainText(os_warning_text)
 
-    def handle_warning_text_changed(self):
+    def _handle_warning_text_changed(self):
+        """
+        Handles the warning text edit changed.
+        Enables the send button if there is text in the text edit, disables it otherwise.
+        :return: None
+        """
         if self.warning_plainTextEdit.toPlainText():
             # If there is text in the warning
             self.send_warning_button.setEnabled(True)
@@ -78,6 +106,7 @@ class SendWarningWindow(QWidget):
         :param event: Close event.
         :return:
         """
-        self.host_obj.warning_window = None
+        if self.host_obj:
+            self.host_obj.warning_window = None
 
         event.accept()

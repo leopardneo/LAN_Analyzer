@@ -76,7 +76,12 @@ class HostInformationWindow(QWidget):
 
         self.close_button.clicked.connect(self.close)
 
-    def disable_fp_scan_button(self, scan_str: str):
+    def _disable_fp_scan_button(self, scan_str: str) -> None:
+        """
+        Disables the button of the given fp scan.
+        :param scan_str: The fp scan (str).
+        :return: None
+        """
         if scan_str == "Well-known port scan":
             self.well_known_port_scan_button.setDisabled(True)
         elif scan_str == "Full port scan":
@@ -84,7 +89,11 @@ class HostInformationWindow(QWidget):
         elif scan_str == "OS detection":
             self.os_detection_scan_button.setDisabled(True)
 
-    def update_fp_scans_section(self):
+    def update_fp_scans_section(self) -> None:
+        """
+        Updates the fingerprint scans section of the window.
+        :return: None
+        """
         self.well_known_port_scan_button.setEnabled(True)
         self.full_port_scan_button.setEnabled(True)
         self.os_detection_scan_button.setEnabled(True)
@@ -93,7 +102,7 @@ class HostInformationWindow(QWidget):
             self.host_fp_scan_progress_bar.setEnabled(True)
             self.host_cancel_fp_scan_tb.setEnabled(True)
             self.scan_in_progress_label.setText(f"{self.host_obj.current_fp_scan_str} currently in progress.")
-            self.disable_fp_scan_button(self.host_obj.current_fp_scan_str)
+            self._disable_fp_scan_button(self.host_obj.current_fp_scan_str)
         else:
             self.scan_in_progress_label.setText("No scan currently in progress.")
             self.host_fp_scan_progress_bar.setDisabled(True)
@@ -106,16 +115,16 @@ class HostInformationWindow(QWidget):
             self.scans_queue_value_label.setEnabled(True)
             self.host_clear_fp_scans_queue_tb.setEnabled(True)
             for scan in self.host_obj.fp_scans_queue:
-                self.disable_fp_scan_button(self.scans_str_trans[scan])
+                self._disable_fp_scan_button(self.scans_str_trans[scan])
         else:
             self.scans_queue_value_label.setText("-Empty-")
             self.scans_queue_value_label.setDisabled(True)
             self.host_clear_fp_scans_queue_tb.setDisabled(True)
 
-    def update_host_information(self):
+    def update_host_information(self) -> None:
         """
-        Updates the information labels.
-        :return:
+        Updates all the information labels.
+        :return: None
         """
         host = self.host_obj
 

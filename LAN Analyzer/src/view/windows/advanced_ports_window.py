@@ -1,15 +1,15 @@
 """
-Author: Ofir Brovin
-This file is the advanced ports information view window part of the LAN Analyzer application.
+Author: Ofir Brovin.
+This file contains the advanced ports information view window part of the LAN Analyzer application.
 """
 from __future__ import annotations
 
 from typing import List
 
 from PyQt5 import QtCore
+from PyQt5.uic import loadUi
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget
-from PyQt5.uic import loadUi
 
 from .help_window import HelpWindow
 

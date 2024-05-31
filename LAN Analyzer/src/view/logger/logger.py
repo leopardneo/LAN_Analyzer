@@ -1,3 +1,7 @@
+"""
+Author: Ofir Brovin.
+This file contains the logger module of the LAN Analyzer application.
+"""
 from PyQt5.QtGui import QIcon, QColor
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 
@@ -5,6 +9,9 @@ from .event import Event
 
 
 class Logger:
+    """
+    Logger module class
+    """
     SCAN_STARTED_EVENT_TYPE = "SCAN STARTED"
     MID_SCAN_RESULT_EVENT_TYPE = "SCAN HOST RESULT"
     SCAN_FINISHED_EVENT_TYPE = "SCAN FINISHED"
@@ -16,6 +23,10 @@ class Logger:
     CONNECTED_HOST_DISCONNECTED_EVENT_TYPE = "CONNECTED HOST DISCONNECTED"
 
     def __init__(self, log_list_widget: QListWidget):
+        """
+        Initiates the logger.
+        :param log_list_widget: The logger list widget.
+        """
         self.events = []
         self.log_list_widget = log_list_widget
 
@@ -60,8 +71,14 @@ class Logger:
 
         event_item.setText(event_message)
         event_item.setIcon(icon)
+
+        # Check if the list widget is already scrolled to the bottom before adding the item
+        scroll_bar = self.log_list_widget.verticalScrollBar()
+        at_bottom = scroll_bar.value() == scroll_bar.maximum()
+
         self.log_list_widget.addItem(event_item)
-        self.log_list_widget.scrollToItem(event_item)
+        if at_bottom:
+            self.log_list_widget.scrollToItem(event_item)  # Scroll to bottom (the new item)
 
     def get_event_at_index(self, index: int) -> Event:
         """

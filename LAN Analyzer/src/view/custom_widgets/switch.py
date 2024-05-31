@@ -1,10 +1,21 @@
+"""
+Author: Ofir Brovin.
+This file is a custom switch widget created in PyQt5.
+"""
 from PyQt5.QtWidgets import QAbstractButton
 from PyQt5.QtGui import QPainter, QPalette, QLinearGradient, QGradient, QColor
 from PyQt5.QtCore import QSize, QPointF, QPropertyAnimation, QEasingCurve, pyqtSlot, Qt, pyqtProperty
 
 
 class Switch(QAbstractButton):
+    """
+    The switch widget class
+    """
     def __init__(self, parent_widget=None):
+        """
+        Initiates the switch.
+        :param parent_widget: The parent widget of the switch.
+        """
         super().__init__(parent_widget)
         self.setCheckable(True)
         self.clicked.connect(self.animate)
@@ -19,51 +30,62 @@ class Switch(QAbstractButton):
         self.setFixedSize(self.sizeHint())
 
     def sizeHint(self):
+        """
+        Provides the size for the switch widget.
+        :return: QSize object of the size.
+        """
         return QSize(47, 23)
 
     @pyqtProperty(float)
-    def position(self):
+    def position(self) -> float:
+        """
+        Property to get the current position of the switch.
+        :return: The current position of the switch (float).
+        """
         return self.mPosition
 
     @position.setter
-    def position(self, value):
+    def position(self, value: float) -> None:
+        """
+        Setter for the position property to update the switch's position.
+        :param value: The new position value.
+        :return: None
+        """
         # print("Position set:", value)  # DEBUG
         self.mPosition = value
         self.update()
 
     @pyqtSlot(bool, name='animate')
     def animate(self):
-        # print("Switch clicked:")  # DEBUG
-        # print("Animation state before start:", self.animation.state())
+        """
+        Slot to handle the animation of the switch when it is clicked.
+        """
         self.animation.setDirection(QPropertyAnimation.Forward if self.isChecked() else QPropertyAnimation.Backward)
-        self.animation.start()
-        # print("Animation state after start:", self.animation.state())
+        self.animation.start()  # Start the animation in the appropriate direction
 
-    def paintEvent(self, event):
+    def paintEvent(self, event) -> None:
+        """
+        Handles the paint event.
+        :param event: The paint event (QAbstractButton).
+        :return: None
+        """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        self.draw(painter)
+        self._draw(painter)
 
-    def BpaintEvent(self, event):
-        painter = QPainter()
-        painter.begin(self)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing)
-        painter.setPen(Qt.NoPen)
-        if not self.isChecked():
-            painter.setBrush(QColor("#777777"))
-            painter.drawRoundedRect(0, 0, self.width(), self.height(), self.height() / 2, self.height() / 2)
-        elif self.isChecked():
-            painter.setBrush(QColor("#aa00ff"))
-            painter.drawRoundedRect(0, 0, self.width(), self.height(), self.height() / 2, self.height() / 2)
-
-    def draw(self, painter):
+    def _draw(self, painter) -> None:
+        """
+        Custom drawing method for the switch.
+        :param painter: QPainter used for drawing.
+        :return: None
+        """
         r = self.rect()
         margin = r.height() // 10
         shadow = self.palette().color(QPalette.Dark)
         light = self.palette().color(QPalette.Light)
-        button = self.palette().color(QPalette.Button)
         painter.setPen(Qt.NoPen)
 
+        # Create gradient for the background
         gradient = QLinearGradient()
         gradient.setSpread(QGradient.PadSpread)
 
@@ -90,41 +112,14 @@ class Switch(QAbstractButton):
 
         # Draw the circle (indicator)
         painter.setBrush(Qt.white)  # Set color for the circle
-        x = r.height() / 2.0 + self.position * (r.width() - r.height())
+        x = r.height() / 2.0 + self.position * (r.width() - r.height())  # Calculate the x position of the circle
         painter.drawEllipse(QPointF(x, r.height() / 2), r.height() / 2 - margin, r.height() / 2 - margin)
 
-    def Adraw(self, painter):
-        r = self.rect()
-        margin = r.height() // 10
-        shadow = self.palette().color(QPalette.Dark)
-        light = self.palette().color(QPalette.Light)
-        button = self.palette().color(QPalette.Button)
-        painter.setPen(Qt.NoPen)
-
-        gradient = QLinearGradient()
-        gradient.setSpread(QGradient.PadSpread)
-
-        gradient.setColorAt(0, shadow.darker(130))
-        gradient.setColorAt(1, light.darker(130))
-        gradient.setStart(0, r.height())
-        gradient.setFinalStop(0, 0)
-        painter.setBrush(gradient)
-        painter.drawRoundedRect(r, r.height() / 2, r.height() / 2)
-
-        gradient.setColorAt(0, shadow.darker(140))
-        gradient.setColorAt(1, light.darker(160))
-        gradient.setStart(0, 0)
-        gradient.setFinalStop(0, r.height())
-        painter.setBrush(gradient)
-        painter.drawRoundedRect(r.adjusted(margin, margin, -margin, -margin), r.height() / 2, r.height() / 2)
-
-        gradient.setColorAt(0, button.darker(130))
-        gradient.setColorAt(1, button)
-
-        painter.setBrush(gradient)
-
-        x = r.height() / 2.0 + self.position * (r.width() - r.height())
-        painter.drawEllipse(QPointF(x, r.height() / 2), r.height() / 2 - margin, r.height() / 2 - margin)
-
-    def resizeEvent(self, event):
+    def resizeEvent(self, event) -> None:
+        """
+        Handles the resize event.
+        Redraws the switch after the resize (update).
+        :param event: QResizeEvent event (QAbstractButton).
+        :return: None
+        """
         self.update()

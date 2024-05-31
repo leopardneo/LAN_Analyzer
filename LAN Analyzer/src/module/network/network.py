@@ -173,12 +173,12 @@ class AnalyzerNetwork(QObject):
         :param add_router_setting_on: Is the automatically add the router to the scan setting on.
         :param retrieve_hostname: Is the retrieve hostname of scanned host setting on.
         :param retrieve_res_time: Is the retrieve response time of scanned host setting on.
-        :return:
+        :return: None
         """
         # Scanning self.scan_addresses
         self.scan_addresses = get_addresses_between(start_scan_addr, end_scan_addr)
         # Router:
-        net_router_addr = self.get_network_router_address()
+        net_router_addr = self._get_network_router_address()
         if add_router_setting_on:
             if net_router_addr == "N/A":
                 self.alert_pop_window_signal.emit("WARNING",
@@ -187,7 +187,6 @@ class AnalyzerNetwork(QObject):
             elif net_router_addr not in self.scan_addresses:
                 self.scan_addresses.append(net_router_addr)
 
-        # self.router = Host("", "", "", "", -1, "router")
         scan_start_time = time.time()
         print("SCANNING ADDRESSES:", self.scan_addresses)
 
@@ -214,20 +213,16 @@ class AnalyzerNetwork(QObject):
         local_host = self.get_host_obj(local_addr)
         if local_host:
             local_host.type = "local_computer"
-            print("I HAVE GOT THE LOCAL COMP!:", local_host)
 
         # If there is already a router host (was set in a previous scan) - no need to recreate it
         if not self.router.ip_address:
-            print("NOT self.router.ip_address (network line 236)")
             # Scan for the network's router
             self.router = self.get_host_obj(net_router_addr)
             if self.router:
                 self.router.type = "router"
                 del self.ip_to_host_obj_dict[net_router_addr]
-                print("I HAVE GOT THE ROUTER!:", self.router)
 
             if self.router is None:
-                print("self.router IS NONE")
                 # The value returned from get_host_obj() in None (not found)
                 self.router = Host("", "", "", "", -1, "router")  # Set default empty router host value
         else:
@@ -235,24 +230,27 @@ class AnalyzerNetwork(QObject):
             if net_router_addr in self.ip_to_host_obj_dict:
                 del self.ip_to_host_obj_dict[net_router_addr]
 
-        # Update the local ip addr for the hosts connector socket address
+        # Update the local ip addr for the Hosts Connector socket address
         self.hosts_connector.local_ip_addr = local_addr
 
         self.scan_finished_signal.emit(
             sorted([value for key, value in self.ip_to_host_obj_dict.items()], key=ip_to_int),
             self.router, scan_took_time, scanned_amount)
 
-    def get_network_router_address(self) -> str:
+    def _get_network_router_address(self) -> str:
         """
         Retrieves the IP address of the network's router.
         :return: The router IP address (str)
         """
+
+        # Getting the address by sending a packet with TTL=1 and get the ICMP error message src.
         packet = IP(dst="8.8.8.8", ttl=1) / ICMP()
 
         response = sr1(packet, timeout=2, verbose=False, iface=conf.iface)
         if response:
             router_addr = response.src
         else:
+            # No router has sent an ICMP error message, get the saved default_gateway value of the NIC.
             default_gateway = self.network_interfaces[self.selected_nic_index].default_gateway
             if default_gateway:
                 router_addr = default_gateway
@@ -297,19 +295,19 @@ class AnalyzerNetwork(QObject):
         if scan_type == self.WELL_KNOWN_PORT_SCAN:
             print("RUNNING WELL KNOWN PORT SCAN")
             scan_str = "Well-known port scan"
-            fp_scan_thread = threading.Thread(target=self.port_scan_handler, args=(host_obj, range(0, 1024),
-                                                                                   udp_setting_checked, timeout))
+            fp_scan_thread = threading.Thread(target=self._port_scan_handler, args=(host_obj, range(0, 1024),
+                                                                                    udp_setting_checked, timeout))
         elif scan_type == self.FULL_PORT_SCAN:
             scan_str = "Full port scan"
-            fp_scan_thread = threading.Thread(target=self.port_scan_handler, args=(host_obj, range(0, 65536),
-                                                                                   udp_setting_checked, timeout))
+            fp_scan_thread = threading.Thread(target=self._port_scan_handler, args=(host_obj, range(0, 65536),
+                                                                                    udp_setting_checked, timeout))
         elif scan_type == self.OS_DETECTION_SCAN:
             if self.os_detector is None:
                 return self.alert_pop_window_signal.emit("ERROR", "Missing the data file for the OS Detector module.\n"
                                                             "Please make sure it exists in the data folder "
                                                             "of the OS Detector and try again.")
             scan_str = "OS detection"
-            fp_scan_thread = threading.Thread(target=self.run_os_detection_scan, args=(host_obj, timeout))
+            fp_scan_thread = threading.Thread(target=self._run_os_detection_scan, args=(host_obj, timeout))
 
         host_obj.fp_scan_in_progress = True
         host_obj.current_fp_scan = scan_type
@@ -325,7 +323,7 @@ class AnalyzerNetwork(QObject):
         fp_scan_thread.daemon = True
         fp_scan_thread.start()
 
-    def port_scan_handler(self, target_host_obj: Host, ports_range: range, scan_udp: bool, timeout: float) -> None:
+    def _port_scan_handler(self, target_host_obj: Host, ports_range: range, scan_udp: bool, timeout: float) -> None:
         """
         Handles the port scan fingerprint scan. (Runs in a thread)
         :param target_host_obj: The target Host object
@@ -341,12 +339,12 @@ class AnalyzerNetwork(QObject):
         time.sleep(1)
         self.fp_scan_finished_signal.emit(target_host_obj)
 
-    def run_os_detection_scan(self, target_host_obj: Host, timeout: float) -> None:
+    def _run_os_detection_scan(self, target_host_obj: Host, timeout: float) -> None:
         """
         Handles the OS Detection fingerprint scan. (Runs in a thread)
         :param target_host_obj: The target Host object
         :param timeout: The timeout to wait for a response from a port.
-        :return:
+        :return: None
         """
 
         ports_set: set = set()
@@ -377,21 +375,21 @@ class AnalyzerNetwork(QObject):
         """
         Creates the host's fp scan progress update timer in the main thread using CreateProgUpdatesTimerEvent.
         :param host_obj: The Host object.
-        :return:
+        :return: None
         """
         if host_obj.fp_scan_in_progress and host_obj.information_window is not None:
             # Create progress updates timer only if the host has a fp scan running and the host's information window is opened
             QCoreApplication.instance().postEvent(self, CreateProgUpdatesTimerEvent(host_obj=host_obj))  # Trigger timer create event
 
-    def send_fp_scan_prog_update(self, host_obj: Host) -> None:
+    def _send_fp_scan_prog_update(self, host_obj: Host) -> None:
         """
-        Emits a signal that progress updates about a host's fingerprint scan.
-        :param host_obj:
-        :return:
+        Emits a signal that updates progress about a host's fingerprint scan.
+        :param host_obj: The Host object.
+        :return: None
         """
         if not host_obj.fp_scan_in_progress or host_obj.information_window is None:
-            print("send_fp_scan_prog_update was called but host doesnt have a fp scan running or"
-                  "host_obj info window is None - stopping the prog updates timer", host_obj.ip_address)
+            # send_fp_scan_prog_update was called but host doesn't have a fp scan running or
+            # host_obj info window is None - stopping the prog updates timer
             return host_obj.fp_scan_progress_timer.stop()
         with host_obj.fp_scan_progress_lock:
             val = host_obj.fp_scan_progress_value
@@ -411,10 +409,10 @@ class AnalyzerNetwork(QObject):
             # Create the QTimer in the main thread
             timer = QTimer()
             host_obj.fp_scan_progress_timer = timer
-            timer.timeout.connect(lambda: self.send_fp_scan_prog_update(host_obj))
+            timer.timeout.connect(lambda: self._send_fp_scan_prog_update(host_obj))
             # .start(600)  # 0.6 seconds delay
             timer.start(1000)  # 1 second delay
-            self.send_fp_scan_prog_update(host_obj)  # Send the 1st update without a delay.
+            self._send_fp_scan_prog_update(host_obj)  # Send the 1st update without a delay.
 
 
 class CreateProgUpdatesTimerEvent(QEvent):
