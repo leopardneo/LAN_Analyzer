@@ -35,37 +35,40 @@ class ConnectorClientNetwork(QObject):
         self.buff_size: int = 1024
         self.downloaded_file: Tuple[str, list] = ("", [])  # Stores the currently in download process file (name, content chunks)
 
-        self.connect_to_analyzer()
-
-    def connect_to_analyzer(self) -> None:
-        """
-        Attempts to connect to the LAN Analyzer.
-        Starts the _receive_messages thread if the connection was successful.
-        :return: None
-        """
         try:
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.socket.connect(self.analyzer_address)
-
-            # Wrap the socket with SSL
-            self.ssl_socket = ssl.wrap_socket(self.socket, cert_reqs=ssl.CERT_NONE)
-
-            request_status = self.ssl_socket.recv(1024).decode()
-
-            if request_status:
-                if request_status == "REFUSED":
-                    sys.exit("The connection was not allowed by the LAN Analyzer.")
-
-            # Listen for incoming messages
-            receive_thread = threading.Thread(target=self._receive_messages)
-            receive_thread.daemon = True
-            receive_thread.start()
-
+            self.connect_to_analyzer()
         except (ConnectionError, OSError, socket.timeout) as e:
             print(e)
             sys.exit("Could not connect to the LAN Analyzer.\n"
                      "Please make sure the provided IP and port in the config.ini file are correct,\n"
                      "and that the LAN Analyzer is running and accepting new connections.")
+        except ValueError:
+            sys.exit("The connection was not allowed by the LAN Analyzer.")
+
+    def connect_to_analyzer(self) -> None:
+        """
+        Attempts to connect to the LAN Analyzer.
+        Starts the _receive_messages thread if the connection was successful.
+        (ConnectionError, OSError, socket.timeout) raised if the connection wasn't successful.
+        ValueError raised if the connection was refused by the LAN Analyzer.
+        :return: None
+        """
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect(self.analyzer_address)
+
+        # Wrap the socket with SSL
+        self.ssl_socket = ssl.wrap_socket(self.socket, cert_reqs=ssl.CERT_NONE)
+
+        request_status = self.ssl_socket.recv(1024).decode()
+
+        if request_status:
+            if request_status == "REFUSED":
+                raise ValueError
+
+        # Listen for incoming messages
+        receive_thread = threading.Thread(target=self._receive_messages)
+        receive_thread.daemon = True
+        receive_thread.start()
 
     def send_message(self, message: str) -> None:
         """

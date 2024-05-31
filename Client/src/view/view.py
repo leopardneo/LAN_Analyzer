@@ -98,7 +98,7 @@ class ConnectorClientWindow(QMainWindow):
 
     def analyzer_disconnected(self) -> None:
         """
-        Sets the widgets to the lan disconnected state.
+        Sets the widgets to the LAN Analyzer disconnected state.
         :return: None
         """
         self.statusbar.setStyleSheet("color: red")
@@ -117,10 +117,20 @@ class ConnectorClientWindow(QMainWindow):
 
     def analyzer_connected(self) -> None:
         """
-        Sets the widgets to the lan connected state.
+        Sets the widgets to the LAN Analyzer connected state.
         :return: None
         """
         self.statusbar.setStyleSheet("")
         self.statusbar.showMessage("Connected to LAN Analyzer")
         self.reconnect_button.setDisabled(True)
         self.chat_frame.setEnabled(True)
+
+    def analyzer_not_accepting(self) -> None:
+        """
+        Sets the widgets to the LAN Analyzer not accepting new connections state.
+        :return: None
+        """
+        self.statusbar.setStyleSheet("color: red")
+        self.statusbar.showMessage("The LAN Analyzer Does Not Accept New Connections!")
+        self.reconnect_button.setEnabled(True)
+        self.chat_frame.setDisabled(True)

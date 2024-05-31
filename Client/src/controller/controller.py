@@ -62,3 +62,6 @@ class HostConnectorClient:
             self.view_window.analyzer_connected()
         except (ConnectionError, OSError, socket.timeout):
             self.view_window.analyzer_disconnected()
+        except ValueError:
+            # Raised if the connection was refused by the LAN Analyzer
+            self.view_window.analyzer_not_accepting()
