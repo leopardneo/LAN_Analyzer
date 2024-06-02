@@ -18,8 +18,8 @@ from typing import List, Tuple
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
 from PyQt5.QtCore import QCoreApplication, QTimer
 
-from ..module.network import AnalyzerNetwork
-from ..module.packages.host import Host
+from ..model.network import AnalyzerNetwork
+from ..model.packages.host import Host
 from ..view import AnalyzerWindow, AdvancedPortsInfoWindow, SendWarningWindow
 from ..view import format_time
 
@@ -77,14 +77,6 @@ class LanAnalyzer:
         self.network_module.sniffer_new_traffic_host_detected_signal.connect(self._handle_new_traffic_host_signal)
 
         # View signals
-        # QUEUE - 26/04
-        # self.view_window.port_scan_button_signal.connect(
-        #     lambda scan_type, host_obj: threading.Thread(
-        #         target=self.network_module.run_port_scan,
-        #         args=(host_obj, scan_type, self.view_window.scan_udp_ports_checkbox.isChecked())).start())
-        # self.view_window.os_detection_scan_button_signal.connect(
-        #     lambda host_obj: threading.Thread(
-        #         target=self.network_module.run_os_detection_scan, args=(host_obj,)).start())
         self.view_window.scan_interval_finished_signal.connect(self._handle_start_or_stop_network_scan)
         self.view_window.host_info_window_created_signal.connect(
             self.network_module.create_host_fp_scans_prog_update_timer)

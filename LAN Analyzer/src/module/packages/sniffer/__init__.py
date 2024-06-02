@@ -1,1 +1,0 @@
-from .sniffer import AnalyzerTrafficSniffer
