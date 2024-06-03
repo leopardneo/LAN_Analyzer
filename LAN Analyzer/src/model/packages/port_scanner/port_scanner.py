@@ -5,8 +5,8 @@ This file is the port scanner module of the LAN Analyzer application.
 import asyncio
 from typing import Tuple, List
 
-from scapy.layers.inet import IP, UDP, ICMP
 from scapy.sendrecv import sr1
+from scapy.layers.inet import IP, UDP, ICMP
 
 from ..host import Host
 
@@ -20,7 +20,7 @@ class PortScanner:
         """
         Initiates the port scanner.
         """
-        self.tcp_scan_running: bool = False
+        self.__tcp_scan_running: bool = False
 
     def run_port_scan(self, target_host_obj: Host, ports_range: range, scan_udp: bool, timeout: float) -> None:
         """
@@ -110,7 +110,7 @@ class PortScanner:
         open_ports: List[int] = []
         closed_ports: List[int] = []
         filtered_ports: List[int] = []
-        self.tcp_scan_running = True
+        self.__tcp_scan_running = True
 
         last_scanned_port: int = 0
         target_ip_addr = target_host_obj.ip_address
@@ -141,7 +141,7 @@ class PortScanner:
                     target_host_obj.fp_scan_progress_value += 1
 
         # print(f"({target_ip_addr}) OPEN TCP PORTS:", open_ports)
-        self.tcp_scan_running = False
+        self.__tcp_scan_running = False
         return open_ports, closed_ports, filtered_ports, last_scanned_port
 
     async def _udp_port_scan(self, target_host_obj: Host, ports, timeout: float) \
@@ -184,7 +184,7 @@ class PortScanner:
                 filtered_ports.append(port)  # No response received - port is closed / filtered!
                 udp_ports_scanned_in_a_row += 1
 
-            if self.tcp_scan_running and udp_ports_scanned_in_a_row >= 3:
+            if self.__tcp_scan_running and udp_ports_scanned_in_a_row >= 3:
                 # print("SCANNED 3 UDP PORTS IN A ROW! SLEEPING FOR 5 SECONDS TO ALLOW TCP")
                 udp_ports_scanned_in_a_row = 0
                 await asyncio.sleep(5)  # Give time for TCP scan to run

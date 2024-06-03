@@ -11,18 +11,18 @@ if __name__ == '__main__':
     sys.exit("This file is part of the LAN Analyzer application and cannot be run independently")
 
 import re
-import time
 import ipaddress
 
 from datetime import datetime
+
 from typing import List, Tuple, Dict
 
 from PyQt5 import QtCore
+from PyQt5.uic import loadUi
 from PyQt5.QtCore import QTimer, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QCursor, QFont, QPainter, QPixmap, QColor
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QAbstractItemView, QHeaderView, QTableWidget, QWidget, \
     QLabel, QVBoxLayout, QSpacerItem, QSizePolicy, QPushButton, QGraphicsView, QMessageBox, QListWidgetItem
-from PyQt5.uic import loadUi
 
 from .custom_widgets import NetworkTopology
 from .logger import Logger
@@ -160,7 +160,7 @@ class AnalyzerWindow(QMainWindow):
         # Enable dragging
         self.topology_view.setDragMode(QGraphicsView.ScrollHandDrag)
 
-        self.hosts_widgets_list: list = []
+        self.__hosts_widgets_list: list = []
 
         # EVENTS LOGGER
         self.logger: Logger = Logger(self.logger_listWidget)
@@ -561,17 +561,14 @@ class AnalyzerWindow(QMainWindow):
                     return
             except Exception as rt:
                 print("RT:", rt)
-            # UPDATE NETWORK:
-            pass  # TODO - Remove
-            # UPDATE GUI:
         else:
             # __ Invalid IP address __
             valid_var = "invalid"
 
         try:
             self._change_ip_lineedit_color(valid_var, start_or_end_entry)
-        except Exception as erf:
-            print("ERF:", erf)
+        except Exception as e:
+            print("ERROR IN _change_ip_lineedit_color:", e)
 
     def _change_ip_lineedit_color(self, valid_status: str, start_or_end_entry: str) -> None:
         """
@@ -660,14 +657,13 @@ class AnalyzerWindow(QMainWindow):
         self.scan_finished_window = ScanFinishedWindow(scan_time, scanned_addrs_amount, responding_hosts_count)
         self.scan_finished_window.show()
 
-        # ****
+        # Topology
         try:
             self._load_topology_view(self.network_topology_viewer.create_hosts_widgets_list(hosts_list), router_host,
                                      True,
                                      should_copy=False)  # No need to copy the widgets as they are new created by create_hosts_widgets_list()
         except Exception as toperr:
-            print("ERROR TOPERR:", toperr)
-        # ****
+            print("ERROR ON _load_topology_view:", toperr)
 
     def _load_topology_view(self, hosts_widgets: list, router_obj: object, is_full_topology: bool,
                             should_copy=True) -> None:
@@ -688,17 +684,17 @@ class AnalyzerWindow(QMainWindow):
             new_hosts_widgets = hosts_widgets
 
         network_topology_viewer_obj.create_topology(new_hosts_widgets, router_obj, is_full_topology)
-        self.hosts_widgets_list = network_topology_viewer_obj.hosts_widgets
+        self.__hosts_widgets_list = network_topology_viewer_obj.hosts_widgets
         # Updating shown hosts counter label
         self.topology_shown_hosts_count_label.setText(
-            f"{len(self.hosts_widgets_list)}/{len(network_topology_viewer_obj.full_topology_widgets)} Shown")
+            f"{len(self.__hosts_widgets_list)}/{len(network_topology_viewer_obj.full_topology_widgets)} Shown")
 
         # Connecting the mouse click signals of each host widget
-        for host_widg in self.hosts_widgets_list:
+        for host_widg in self.__hosts_widgets_list:
             host_widg.single_click_host_signal.connect(
                 lambda host_obj, host_widg: self.host_click_connect(host_obj, host_widg))
             host_widg.double_click_host_signal.connect(lambda host: self.show_host_information(host))
-            host_widg.host_flag_updated_signal.connect(lambda host: self.handle_search_in_topology())  # TODO - no need to carry the host obj in the signal - rem?
+            host_widg.host_flag_updated_signal.connect(lambda: self.handle_search_in_topology())
 
     def handle_search_in_topology(self) -> None:
         """
@@ -904,7 +900,7 @@ class AnalyzerWindow(QMainWindow):
         :param host_widg: The clicked HostWidget.
         :return: None
         """
-        for host_widget in self.hosts_widgets_list:
+        for host_widget in self.__hosts_widgets_list:
             # Make all other hosts widgets not selected colored
             if host_widget == host_widg:
                 continue

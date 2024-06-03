@@ -103,7 +103,7 @@ class AnalyzerNetwork(QObject):
 
         # OS DETECTOR
         self.os_detector: OsDetector | None
-        os_fp_data_path: str = r"src\module\packages\os_fp\data\os_fp_db.fp"
+        os_fp_data_path: str = r"src\model\packages\os_fp\data\os_fp_db.fp"
         if os.path.exists(os_fp_data_path):
             self.os_detector = OsDetector(os_fp_data_path)
         else:
@@ -115,7 +115,7 @@ class AnalyzerNetwork(QObject):
 
         # MAC VENDOR LOOKUP
         self.mac_vendor_lookup: MacVendorLookup | None
-        mac_vendor_lookup_data_path: str = r"src\module\packages\mac_vendor_lookup\data\mac_vendor_data.json"
+        mac_vendor_lookup_data_path: str = r"src\model\packages\mac_vendor_lookup\data\mac_vendor_data.json"
         if os.path.exists(mac_vendor_lookup_data_path):
             self.mac_vendor_lookup = MacVendorLookup(mac_vendor_lookup_data_path)
         else:
@@ -127,7 +127,7 @@ class AnalyzerNetwork(QObject):
 
         # PORT SERVICE
         self.port_service_lookup: PortServiceLookup | None
-        port_service_lookup_data_path: str = r"src\module\packages\ports_services_lookup\data\service-names-port-numbers.csv"
+        port_service_lookup_data_path: str = r"src\model\packages\ports_services_lookup\data\service-names-port-numbers.csv"
         if os.path.exists(port_service_lookup_data_path):
             self.port_service_lookup = PortServiceLookup(port_service_lookup_data_path)
         else:
@@ -157,7 +157,6 @@ class AnalyzerNetwork(QObject):
         self.selected_nic_index = nic_index
         iface = self.network_interfaces[nic_index]
         self.scan_addresses = get_subnet_addresses_from_cidr(iface.cidr_notation)
-        print(self.scan_addresses)
         conf.iface = iface.description
 
     def start_scanning_network(self, start_scan_addr: str, end_scan_addr: str, scan_method: str,
@@ -410,7 +409,6 @@ class AnalyzerNetwork(QObject):
             timer = QTimer()
             host_obj.fp_scan_progress_timer = timer
             timer.timeout.connect(lambda: self._send_fp_scan_prog_update(host_obj))
-            # .start(600)  # 0.6 seconds delay
             timer.start(1000)  # 1 second delay
             self._send_fp_scan_prog_update(host_obj)  # Send the 1st update without a delay.
 

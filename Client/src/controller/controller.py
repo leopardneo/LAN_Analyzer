@@ -5,9 +5,10 @@ This file is the controller of the LAN Analyzer host connector client.
 import socket
 
 from typing import Tuple
+
 from threading import Thread
 
-from ..module import ConnectorClientNetwork
+from ..model import ConnectorClientNetwork
 from ..view import ConnectorClientWindow
 
 
@@ -42,7 +43,6 @@ class HostConnectorClient:
         """
         try:
             message_text = self.view_window.message_lineEdit.text()
-            print(message_text)
             if not message_text:
                 return
             self.network_module.send_message(message_text)

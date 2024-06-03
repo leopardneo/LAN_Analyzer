@@ -28,12 +28,12 @@ class ConnectorClientNetwork(QObject):
         :param analyzer_address: The LAN Analyzer listening address to connect to. [IP, port]
         """
         super().__init__()
-        self.analyzer_address: Tuple[str, int] = analyzer_address
-        self.socket: socket.socket | None = None
-        self.ssl_socket: ssl.SSLSocket | None = None
+        self.__analyzer_address: Tuple[str, int] = analyzer_address
+        self.__socket: socket.socket | None = None
+        self.__ssl_socket: ssl.SSLSocket | None = None
 
-        self.buff_size: int = 1024
-        self.downloaded_file: Tuple[str, list] = ("", [])  # Stores the currently in download process file (name, content chunks)
+        self.__buff_size: int = 1024
+        self.__downloaded_file: Tuple[str, list] = ("", [])  # Stores the currently in download process file (name, content chunks)
 
         try:
             self.connect_to_analyzer()
@@ -53,13 +53,13 @@ class ConnectorClientNetwork(QObject):
         ValueError raised if the connection was refused by the LAN Analyzer.
         :return: None
         """
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect(self.analyzer_address)
+        self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__socket.connect(self.__analyzer_address)
 
         # Wrap the socket with SSL
-        self.ssl_socket = ssl.wrap_socket(self.socket, cert_reqs=ssl.CERT_NONE)
+        self.__ssl_socket = ssl.wrap_socket(self.__socket, cert_reqs=ssl.CERT_NONE)
 
-        request_status = self.ssl_socket.recv(1024).decode()
+        request_status = self.__ssl_socket.recv(1024).decode()
 
         if request_status:
             if request_status == "REFUSED":
@@ -77,21 +77,20 @@ class ConnectorClientNetwork(QObject):
         :return: None
         """
         try:
-            # self.socket.send(message.encode())
-            self.ssl_socket.send(message.encode())
+            self.__ssl_socket.send(message.encode())
         except OSError:
             # Socket closed
-            print("SOCKETS CLOSED WHEN TRYING TO SEND A MESSAGE")
+            print("SOCKET CLOSED WHEN TRYING TO SEND A MESSAGE")
             return self._analyzer_disconnected()
 
-    def _receive_messages(self):
+    def _receive_messages(self) -> None:
         """
         Receives messages from the LAN Analyzer (runs in a thread).
         :return: None
         """
         while True:
             try:
-                data = self.ssl_socket.recv(self.buff_size)
+                data = self.__ssl_socket.recv(self.__buff_size)
             except ConnectionError:
                 # Analyzer (server) killed connection
                 return self._analyzer_disconnected()
@@ -106,20 +105,20 @@ class ConnectorClientNetwork(QObject):
                     self.message_received_signal.emit(message_text.decode(), message_type.decode())
                 elif data.startswith(b"<FILE_TRANSFER_START>"):
                     # File transfer start declaration message.
-                    self.buff_size = 1024 * 8  # Set buffer size bigger to support file transfer
+                    self.__buff_size = 1024 * 8  # Set buffer size bigger to support file transfer
                     file_name = data.split(b"@", maxsplit=1)[1]  # Extract the file name from the FILE_TRANSFER_START message
-                    self.downloaded_file = (file_name.decode(), [])  # Initialize the downloaded file storing var
+                    self.__downloaded_file = (file_name.decode(), [])  # Initialize the downloaded file storing var
                     # Remove the <FILE_TRANSFER_START>@{file_name} prefix and check if there is file data after it
                     data = data[22 + len(file_name):]  # (22 = len of <FILE_TRANSFER_START> header)
                     if data:
-                        self.downloaded_file[1].append(data)
+                        self.__downloaded_file[1].append(data)
                         # Was the trailing data the entire file?
-                        if self.downloaded_file[1][-1].endswith(b"<FILE_TRANSFER_END>"):
+                        if self.__downloaded_file[1][-1].endswith(b"<FILE_TRANSFER_END>"):
                             self._file_download_completed_handler()
                 else:
                     # Data is part of a downloaded file contents.
-                    self.downloaded_file[1].append(data)
-                    if self.downloaded_file[1][-1].endswith(b"<FILE_TRANSFER_END>"):
+                    self.__downloaded_file[1].append(data)
+                    if self.__downloaded_file[1][-1].endswith(b"<FILE_TRANSFER_END>"):
                         # Downloading the file has completed - received all chunks.
                         self._file_download_completed_handler()
 
@@ -129,9 +128,9 @@ class ConnectorClientNetwork(QObject):
         Saves the file to the saved_files dir and restores the buffer size.
         :return: None
         """
-        self.buff_size = 1024
-        file_name = self.downloaded_file[0]
-        file_contents = b"".join(self.downloaded_file[1])  # Combine all the file content chunks
+        self.__buff_size = 1024
+        file_name = self.__downloaded_file[0]
+        file_contents = b"".join(self.__downloaded_file[1])  # Combine all the file content chunks
         # Create the saved_files directory if it doesn't exist
         if not os.path.exists(os.getcwd() + r"\saved_files"):
             os.mkdir("saved_files")
@@ -144,5 +143,5 @@ class ConnectorClientNetwork(QObject):
         Updates the module values to indicate that the LAN Analyzer has disconnected.
         :return: None
         """
-        self.ssl_socket.close()
+        self.__ssl_socket.close()
         self.analyzer_disconnected_signal.emit()

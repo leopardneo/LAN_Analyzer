@@ -41,15 +41,10 @@ class LanAnalyzer:
             lambda amount: self.view_window.scan_prog_bar.setMaximum(amount))
         self.network_module.scan_progress_update_signal.connect(
             lambda amount: self.view_window.scan_prog_bar.setValue(amount))
-        # self.network_module.scan_address_result_signal.connect(lambda host: self.view_window.add_row_to_table(
-        #     host.ip_address, host.hostname))  # SPECIAL
         self.network_module.scan_address_result_signal.connect(self._handle_host_finished_scan_signal)
         self.network_module.scan_address_no_longer_online_signal.connect(self._handle_host_no_longer_online_signal)
-        # ***
-        # self.network_module.scan_finished_signal.connect(lambda local_addr, hosts_list, router_host, time, scanned:
-        #                                                  self.view_window.scan_finished(local_addr, hosts_list, router_host, time, scanned))
         self.network_module.scan_finished_signal.connect(self._handle_scan_finished_signal)
-        # ***
+
         self.network_module.alert_pop_window_signal.connect(
             lambda mtype, message: self._handle_pop_window_signal(mtype, message))
 
@@ -84,9 +79,7 @@ class LanAnalyzer:
                                                          self._handle_run_host_fp_scan(host_obj, scan_type))
         self.view_window.os_detection_scan_button_signal.connect(
             lambda host_obj: self._handle_run_host_fp_scan(host_obj, self.network_module.OS_DETECTION_SCAN))
-        # self.view_window.host_clear_fp_scans_queue_signal.connect(self.handle_clear_host_fp_scans_queue) 26/05
         self.view_window.host_clear_fp_scans_queue_signal.connect(lambda host_obj: host_obj.clear_fp_scans_queue())
-        # self.view_window.host_stop_fp_scan_signal.connect(self.handle_stop_host_fp_scan) 26/05
         self.view_window.host_stop_fp_scan_signal.connect(lambda host_obj: host_obj.stop_running_fp_scan())
         self.view_window.host_open_advanced_port_win_signal.connect(self._handle_open_host_advanced_port_win)
 
@@ -174,43 +167,40 @@ class LanAnalyzer:
         """
         try:
             if self.view_window.start_scan_button.text() == "Start Scan":
-                try:
-                    self.view_window.scan_start()
-                    # Checking the scan method from the settings
-                    if self.view_window.arp_scan_method_radio_button.isChecked():
-                        # ARP Only
-                        scan_method = "ARP"
-                    elif self.view_window.icmp_scan_method_radio_button.isChecked():
-                        # ICMP Ping only
-                        scan_method = "ICMP"
-                    else:
-                        # Scan using both ARP and ICMP
-                        scan_method = "BOTH"
+                self.view_window.scan_start()
+                # Checking the scan method from the settings
+                if self.view_window.arp_scan_method_radio_button.isChecked():
+                    # ARP Only
+                    scan_method = "ARP"
+                elif self.view_window.icmp_scan_method_radio_button.isChecked():
+                    # ICMP Ping only
+                    scan_method = "ICMP"
+                else:
+                    # Scan using both ARP and ICMP
+                    scan_method = "BOTH"
 
-                    # Start network module scan process thread
-                    scan_thread = threading.Thread(target=self.network_module.start_scanning_network,
-                                                   args=(self.view_window.start_ip_line.text(),
-                                                         self.view_window.end_ip_line.text(),
-                                                         scan_method,
-                                                         self.view_window.interval_setting_spinbox.value(),
-                                                         self.view_window.timeout_setting_spinbox.value(),
-                                                         self.view_window.router_setting_switch.isChecked(),
-                                                         self.view_window.retrieve_hostname_setting_switch.isChecked(),
-                                                         self.view_window.retrieve_res_time_setting_switch.isChecked()))
-                    scan_thread.daemon = True
-                    scan_thread.start()
-                    # Add event to logger
-                    self.view_window.logger.add_event(event_message=f"Scan started.",
-                                                      event_type=self.view_window.logger.SCAN_STARTED_EVENT_TYPE)
-                except Exception as e:
-                    print("ERROR occurred on start scan function:", e)
+                # Start network module scan process thread
+                scan_thread = threading.Thread(target=self.network_module.start_scanning_network,
+                                               args=(self.view_window.start_ip_line.text(),
+                                                     self.view_window.end_ip_line.text(),
+                                                     scan_method,
+                                                     self.view_window.interval_setting_spinbox.value(),
+                                                     self.view_window.timeout_setting_spinbox.value(),
+                                                     self.view_window.router_setting_switch.isChecked(),
+                                                     self.view_window.retrieve_hostname_setting_switch.isChecked(),
+                                                     self.view_window.retrieve_res_time_setting_switch.isChecked()))
+                scan_thread.daemon = True
+                scan_thread.start()
+                # Add event to logger
+                self.view_window.logger.add_event(event_message=f"Scan started.",
+                                                  event_type=self.view_window.logger.SCAN_STARTED_EVENT_TYPE)
             else:
                 # Stop scan pressed
                 self.view_window.start_scan_button.setDisabled(True)
                 self.view_window.start_scan_button.setText("Stopping Scan...")
                 self.network_module.scanner.set_stop_scan(value=True)  # Set the stop flag in the network scanner
         except Exception as eee:
-            print("ERROR THERE WAS ERROR ON STARTING / STOPPING THE SCAN!!!:", type(eee), eee)
+            print("ERROR THERE WAS ERROR ON STARTING / STOPPING THE SCAN!:", type(eee), eee)
 
     def _handle_host_finished_scan_signal(self, host: Host) -> None:
         """
@@ -265,12 +255,11 @@ class LanAnalyzer:
                 del self.network_module.mac_to_host_obj_dict[saved_host_obj_mac_addr]
             del self.network_module.ip_to_host_obj_dict[host_ip_addr]
             # Add event to logger
-            # TODO - add this event ?
             self.view_window.logger.add_event(event_message=f"{host_ip_addr} discovered no longer online in the scan",
                                               event_type=self.view_window.logger.MID_SCAN_RESULT_EVENT_TYPE)
 
         except Exception as e:
-            print("ERROR IN handle_host_no_longer_online_signal (main):::", e)
+            print("ERROR IN handle_host_no_longer_online_signal (controller):::", e)
 
     def _handle_scan_finished_signal(self, hosts_list: List[Host], router_host: Host, time_taken: float, scanned: int) -> None:
         """
@@ -305,7 +294,7 @@ class LanAnalyzer:
                                                             f"{len(hosts_list) + (1 if router_host.ip_address else 0)} hosts discovered.",
                                               event_type=self.view_window.logger.SCAN_FINISHED_EVENT_TYPE)
         except Exception as e:
-            print("ERROR ON SCAN FINISHED SIGNAL MAIN HANDLING:::", e)
+            print("ERROR ON SCAN FINISHED SIGNAL CONTROLLER HANDLING:::", e)
 
     def _handle_host_table_single_click(self, row) -> None:
         """
@@ -396,8 +385,6 @@ class LanAnalyzer:
         if host_obj.fp_scans_queue:
             self._handle_run_host_fp_scan(host_obj, host_obj.fp_scans_queue.pop(0))
 
-
-
     def _handle_open_host_advanced_port_win(self, host_obj: Host) -> None:
         """
         Opens the advanced ports information window for a host.
@@ -423,7 +410,7 @@ class LanAnalyzer:
                 closed_tcp_ports_length = len(closed_tcp_ports)
                 if closed_tcp_ports and closed_tcp_ports_length <= 10:
                     closed_tcp_ports_and_services_list: List[str] = self._get_ports_and_services_list(closed_tcp_ports,
-                                                                                                     "TCP")
+                                                                                                      "TCP")
 
             filtered_tcp_ports_and_services_list = []
             filtered_tcp_ports_length = 0
@@ -453,7 +440,7 @@ class LanAnalyzer:
                 open_udp_ports_length = len(open_udp_ports)
                 if open_udp_ports:
                     open_udp_ports_and_services_list: List[str] = self._get_ports_and_services_list(open_udp_ports,
-                                                                                                   "UDP")
+                                                                                                    "UDP")
 
                 closed_udp_ports_and_services_list = []
                 closed_udp_ports_length = 0
@@ -688,7 +675,7 @@ class LanAnalyzer:
                 self.view_window.warning_window = SendWarningWindow(warning_dest_ip_addr=target_host[0])
 
                 self.view_window.warning_window.send_warning_button.clicked.connect(lambda:
-                                                                                   self.network_module.hosts_connector.send_message(
+                                                                                    self.network_module.hosts_connector.send_message(
                                                                                        self.view_window.warning_window.warning_plainTextEdit.toPlainText(),
                                                                                        self.view_window.warning_window.warning_type_comboBox.currentText().upper(),
                                                                                        target_host))
@@ -783,7 +770,6 @@ class LanAnalyzer:
         """
         Handles the new message (from or to) a connected host signal.
         Logs the event to logger.
-        # TODO - logs message when sent and also when received! (change that?)
         :param message_host: The message's connected host socket address [IP, port]
         :return: None
         """
@@ -853,7 +839,6 @@ class LanAnalyzer:
         """
         if self.view_window.stackedWidget.currentIndex() != 2 or \
                 not self.view_window.sniffer_hosts_list_widget.currentItem():
-            print("STOPPING THE TRAFFIC PLOT UPDATES TIMER")
             # If the screen is no longer looking at the traffic sniffer screen or no host is selcted - stop the updates timer
             if self.traffic_graphs_update_timer and self.traffic_graphs_update_timer.isActive():
                 self.traffic_graphs_update_timer.stop()
@@ -863,13 +848,15 @@ class LanAnalyzer:
         sniffer_obj = self.network_module.sniffer
         with sniffer_obj.traffic_graphs_data_lock:
             if host_mac_addr not in sniffer_obj.hosts_datetime_to_packets_amount.keys():
-                print("NOT IN:::", sniffer_obj.hosts_datetime_to_packets_amount.keys())
                 times, incoming_data, outgoing_data = [], [], []
             else:
                 data = sniffer_obj.hosts_datetime_to_packets_amount[host_mac_addr]
                 times = data.keys()
-                incoming_data = [data[time][0] for time in times]
-                outgoing_data = [data[time][1] for time in times]
+                incoming_data = []
+                outgoing_data = []
+                for time in times:
+                    incoming_data.append(data[time][0])
+                    outgoing_data.append(data[time][1])
 
             self.view_window.load_host_traffic_graphs(times, incoming_data, outgoing_data)
 
@@ -926,7 +913,7 @@ class LanAnalyzer:
         """
         host_widget = self.view_window.find_host_widget_from_topology(host_mac_address=host_mac_addr)
         if host_widget:
-            host_widget.set_traffic_icon(is_high_traffic=False)  # TODO - 21/04
+            host_widget.set_traffic_icon(is_high_traffic=False)
             # Add event to logger
             self.view_window.logger.add_event(
                 event_message=f"Traffic detected for {host_widget.host_obj.ip_address}",
@@ -1043,5 +1030,4 @@ class LanAnalyzer:
         self.view_window = None
         self.network_module.hosts_connector.close_connector()
         self.network_module.sniffer.stop_sniffing()
-        self.network_module = None
         QCoreApplication.quit()

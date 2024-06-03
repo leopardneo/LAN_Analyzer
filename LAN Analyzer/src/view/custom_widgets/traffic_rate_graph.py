@@ -25,8 +25,8 @@ class TrafficRateGraph(QWidget):
         """
         super().__init__(parent_widget)
 
-        self.data = None
-        self.times = None
+        self.__packets_counts: list = []
+        self.__times: np.ndarray | None = None
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
@@ -65,8 +65,8 @@ class TrafficRateGraph(QWidget):
         """
         self.ax.clear()
         times_no_ms = [time.replace(microsecond=0) for time in times]  # Remove milliseconds
-        self.times = mdates.date2num(times_no_ms)  # Convert times to matplotlib date numbers
-        self.data = data
+        self.__times = mdates.date2num(times_no_ms)  # Convert times to matplotlib date numbers
+        self.__packets_counts = data
         self.ax.plot(times_no_ms, data, '.-', label='Packets Per Second', color=color)
         self.ax.legend()
         self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m %H:%M:%S'))  # Format x-axis labels
@@ -85,20 +85,20 @@ class TrafficRateGraph(QWidget):
             x, y = event.xdata, event.ydata
             if x is not None and y is not None:
                 # Find the nearest data point
-                if self.times is not None and len(self.times) > 0:
+                if self.__times is not None and len(self.__times) > 0:
                     # Calculate the distance threshold based on the number of points
-                    distance_threshold = 0.15 + len(self.times) * 0.01
+                    distance_threshold = 0.15 + len(self.__times) * 0.01
 
                     # Find the nearest data point
-                    idx = np.abs(self.times - x).argmin()
-                    nearest_x, nearest_y = mdates.num2date(self.times[idx]), self.data[idx]
+                    idx = np.abs(self.__times - x).argmin()
+                    nearest_x, nearest_y = mdates.num2date(self.__times[idx]), self.__packets_counts[idx]
 
                     # Set the text in the location label in the toolbar
                     self.toolbar.locLabel.setText(f"Time: {nearest_x.strftime('%d/%m/%Y %H:%M:%S')}"
                                                   f' - Packets Per Second: {int(y)}')
 
                     # Calculate the distance from the mouse cursor to the nearest point
-                    distance = np.sqrt((x - self.times[idx]) ** 2 + (y - nearest_y) ** 2)
+                    distance = np.sqrt((x - self.__times[idx]) ** 2 + (y - nearest_y) ** 2)
 
                     # Show annotation if the distance is below the threshold (mouse is close enough)
                     if distance < distance_threshold:

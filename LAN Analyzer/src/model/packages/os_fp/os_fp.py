@@ -4,6 +4,8 @@ This file contains the OS Fingerprint Detector module of the LAN Analyzer applic
 """
 from __future__ import annotations
 
+from typing import List
+
 from scapy.sendrecv import sr1
 from scapy.packet import Packet
 from scapy.layers.inet import IP, TCP
@@ -27,7 +29,7 @@ class OsDetector:
         :param data_file_path: The path to the os fp information file.
         """
         with open(data_file_path) as fp_file:
-            self.fp_database = fp_file.readlines()
+            self.__fp_database: List[str] = fp_file.readlines()
 
     def detect_os(self, target_host: Host, ports: set, timeout: float) -> str:
         """
@@ -90,7 +92,7 @@ class OsDetector:
         if sig_type == "SA":
             # SYN/ACK
             last_label: str = ""
-            for line in self.fp_database[self.SYN_ACK_RANGE[0]: self.SYN_ACK_RANGE[1]]:
+            for line in self.__fp_database[self.SYN_ACK_RANGE[0]: self.SYN_ACK_RANGE[1]]:
                 line = line.strip()
                 if line.startswith("label"):
                     last_label = line.split(" = ")[1]  # Get the actual label

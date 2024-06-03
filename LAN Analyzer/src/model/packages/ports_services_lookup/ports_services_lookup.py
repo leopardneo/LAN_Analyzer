@@ -16,15 +16,17 @@ class PortServiceLookup:
         Initiates the module.
         :param data_file_path: The path to the ports services information file.
         """
-        self.data_file_path = data_file_path
-        self.tcp_services, self.udp_services = self._parse_csv()
+        self.__data_file_path = data_file_path
+        self.__tcp_services: Dict[int, str]
+        self.__udp_services: Dict[int, str]
+        self.__tcp_services, self.__udp_services = self._parse_csv()
 
     @staticmethod
     def _parse_port_range(port_range: str) -> List[int]:
         """
-        Converts a port range in string (10-20) to ports list.
-        :param port_range: The port range
-        :return:
+        Converts ports range in string (10-20) to ports list.
+        :param port_range: The port range in string.
+        :return: List of the ports within the given range.
         """
         ports = []
         if port_range.strip():
@@ -44,7 +46,7 @@ class PortServiceLookup:
         """
         udp_services = {}
         tcp_services = {}
-        with open(self.data_file_path, 'r', encoding='utf-8') as csv_file:
+        with open(self.__data_file_path, 'r', encoding='utf-8') as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for row in csv_reader:
                 port = row['Port Number']
@@ -64,7 +66,7 @@ class PortServiceLookup:
                             udp_services[p] = f"{service_name + ' - ' if service_name else ''}{service_description}"
         return tcp_services, udp_services
 
-    def lookup_service(self, port, protocol):
+    def lookup_service(self, port, protocol) -> str:
         """
         Get the service related to the given port in the given protocol.
         :param port: The port.
@@ -72,9 +74,7 @@ class PortServiceLookup:
         :return: The port's service. "Unknown" if not known.
         """
         port = int(port)
-        if protocol.upper() == 'TCP' and port in self.tcp_services:
-            return self.tcp_services[port]
-        elif protocol.upper() == 'UDP' and port in self.udp_services:
-            return self.udp_services[port]
-        else:
-            return "Unknown"
+        if protocol.upper() == 'TCP':
+            return self.__tcp_services.get(port, "Unknown")
+        elif protocol.upper() == 'UDP':
+            return self.__udp_services.get(port, "Unknown")

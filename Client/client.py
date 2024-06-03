@@ -10,7 +10,7 @@ from typing import Tuple
 from PyQt5.QtWidgets import QApplication
 
 from src.controller import HostConnectorClient
-from src.module.util.ip_address_functions import is_valid_ip_address, is_private_ip_address
+from src.model.util.ip_address_functions import is_valid_ip_address, is_private_ip_address
 
 
 def _get_analyzer_listening_address() -> Tuple[str, int]:

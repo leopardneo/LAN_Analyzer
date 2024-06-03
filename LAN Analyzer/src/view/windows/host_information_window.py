@@ -146,7 +146,7 @@ class HostInformationWindow(QWidget):
                 ports_str: str = ""
                 if host.open_ports[0]:
                     total_open_amount += len(host.open_ports[0])
-                    ports_str += f"TCP: {', '.join(str(p) for p in host.open_ports[0])}. "  # TODO: font
+                    ports_str += f"TCP: {', '.join(str(p) for p in host.open_ports[0])}. "
                 if host.open_ports[1]:
                     total_open_amount += len(host.open_ports[1])
                     ports_str += f"UDP: {', '.join(str(p) for p in host.open_ports[1])}."

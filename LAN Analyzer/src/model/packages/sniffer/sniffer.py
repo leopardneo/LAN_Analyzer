@@ -9,8 +9,11 @@ import time
 import threading
 
 from datetime import datetime
+
 from typing import Dict, Tuple
+
 from statistics import mean, stdev
+
 from collections import defaultdict
 
 from PyQt5.QtCore import pyqtSignal

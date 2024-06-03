@@ -5,6 +5,7 @@ This file is a custom network diagram representation widget created in PyQt5.
 from __future__ import annotations
 
 import math
+
 from typing import List, Dict
 
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsProxyWidget, QMenu, QGraphicsLineItem
@@ -93,8 +94,6 @@ class NetworkTopology(QGraphicsScene):
         """
         super().__init__(parent_widget)
 
-        self.nodes: List[Node] = []
-        self.links: List[Link] = []
         self.hosts_widgets: List[HostWidget] = []
         self.ip_addr_to_host_widget_dict: Dict[str, HostWidget] = {}  # {IP: HostWidget}
         self.mac_addr_to_host_widget_dict: Dict[str, HostWidget] = {}  # {MAC: HostWidget}
@@ -134,8 +133,6 @@ class NetworkTopology(QGraphicsScene):
             self.is_full_topology_shown = False
 
         self.clear()
-        self.nodes.clear()
-        self.links.clear()
         self.hosts_widgets.clear()
         self.ip_addr_to_host_widget_dict.clear()
         self.mac_addr_to_host_widget_dict.clear()
@@ -208,7 +205,6 @@ class NetworkTopology(QGraphicsScene):
         """
         node = Node(host_widget, x, y)
         self.addItem(node)
-        self.nodes.append(node)
         return node
 
     def _add_link(self, start_node, end_node, new_line) -> None:
@@ -217,7 +213,7 @@ class NetworkTopology(QGraphicsScene):
         :param start_node: The link start node.
         :param end_node: The link end node.
         :param new_line: Is the connection happening with a node that is within a new line.
+        :return: None
         """
         link = Link(start_node, end_node, new_line)
         self.addItem(link)
-        self.links.append(link)

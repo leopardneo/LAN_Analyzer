@@ -5,9 +5,9 @@ This file is the view module of the LAN Analyzer host connector client.
 import datetime
 
 from PyQt5 import QtCore
+from PyQt5.uic import loadUi
 from PyQt5.QtGui import QIcon, QColor, QCursor
 from PyQt5.QtWidgets import QMainWindow, QListWidgetItem, QMessageBox
-from PyQt5.uic import loadUi
 
 
 class ConnectorClientWindow(QMainWindow):

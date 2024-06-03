@@ -16,7 +16,7 @@ class HostWidget(QWidget):
     single_click_host_signal: pyqtSignal = pyqtSignal(object,
                                                       object)  # Transfers Host and HostWidget (self.host_obj, self)
     double_click_host_signal: pyqtSignal = pyqtSignal(object)  # Transfers Host (self.host_obj)
-    host_flag_updated_signal: pyqtSignal = pyqtSignal(object)  # Transfers Host
+    host_flag_updated_signal: pyqtSignal = pyqtSignal()
 
     def __init__(self, host_obj):
         """
@@ -161,7 +161,7 @@ class HostWidget(QWidget):
             self.flag_label.clear()
             self.host_obj.flagged = False
         self.update()
-        self.host_flag_updated_signal.emit(self.host_obj)
+        self.host_flag_updated_signal.emit()
 
     def set_traffic_icon(self, is_high_traffic: bool):
         """

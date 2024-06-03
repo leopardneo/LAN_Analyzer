@@ -2,6 +2,8 @@
 Author: Ofir Brovin.
 This file contains the logger module of the LAN Analyzer application.
 """
+from typing import List
+
 from PyQt5.QtGui import QIcon, QColor
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 
@@ -27,7 +29,7 @@ class Logger:
         Initiates the logger.
         :param log_list_widget: The logger list widget.
         """
-        self.events = []
+        self.events: List[Event] = []
         self.log_list_widget = log_list_widget
 
     def add_event(self, event_message: str, event_type: str) -> None:
