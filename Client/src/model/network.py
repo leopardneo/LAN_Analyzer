@@ -43,7 +43,7 @@ class ConnectorClientNetwork(QObject):
                      "Please make sure the provided IP and port in the config.ini file are correct,\n"
                      "and that the LAN Analyzer is running and accepting new connections.")
         except ValueError:
-            sys.exit("The connection was not allowed by the LAN Analyzer.")
+            sys.exit("The connection was not allowed by the LAN Analyzer.", e)
 
     def connect_to_analyzer(self) -> None:
         """
@@ -56,8 +56,10 @@ class ConnectorClientNetwork(QObject):
         self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__socket.connect(self.__analyzer_address)
 
-        # Wrap the socket with SSL
-        self.__ssl_socket = ssl.wrap_socket(self.__socket, cert_reqs=ssl.CERT_NONE)
+        context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+        context.load_verify_locations(cafile=r"src\model\TLS\server_cert.pem")
+        context.check_hostname = False  # Allow the script to run on any host (don't check specific hostname)
+        self.__ssl_socket = context.wrap_socket(self.__socket)
 
         request_status = self.__ssl_socket.recv(1024).decode()
 
