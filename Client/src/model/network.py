@@ -43,7 +43,7 @@ class ConnectorClientNetwork(QObject):
                      "Please make sure the provided IP and port in the config.ini file are correct,\n"
                      "and that the LAN Analyzer is running and accepting new connections.")
         except ValueError:
-            sys.exit("The connection was not allowed by the LAN Analyzer.", e)
+            sys.exit("The connection was not allowed by the LAN Analyzer.")
 
     def connect_to_analyzer(self) -> None:
         """
